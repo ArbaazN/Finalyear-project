@@ -1,0 +1,78 @@
+{%load static%}
+<!Doctype html>
+<head>
+	<meta charset="utf-8">
+	<title>Job Search</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>    
+
+<style type="text/css">
+	body{
+			background-image: url("{%static 'bg.jpg'%}");
+			background-repeat: no-repeat;
+			background-attachment: fixed;
+			background-size: cover;
+			
+		}
+		.main{
+			left:410px;
+			width:700px;
+			background-color:gainsboro;
+			align-items:center;
+			border-radius:5%;
+			padding-top: auto;
+		}
+		div{
+			padding:15px;
+		}
+		input[type=submit]{
+			background-color:Black;
+			color:white;
+			cursor:pointer;
+			padding: 16px 32px;
+		}
+		h1{
+			font-size:40px;
+		}
+		h2{
+			font-size:30px;
+			color:burlywood;
+		}
+		@media screen and (max-width:600px) {
+        .comps{
+            height: auto;
+            margin-top: 12vh;
+            margin-bottom: 12vh;
+        }
+</style>
+</head>
+
+<body style="text-align:center;">
+	{%load static%}
+	<center>
+<h2>Smart Recommendor System</h2><br>
+<div class="container">
+  <div class="row">
+  	{% if d %}
+  	{% for i in d %}
+	  <div class="col-sm-12 col-md-6 col-lg-3 pb-4 infinite-item">
+	<div class="card" style="height:25rem;width:18rem;">
+	<div class="card-body">
+    <h4 class="card-title"><b>{{i.comp_name}}</b></h4> 
+    <p class="card-text text-muted h5"><b>{{i.comp_role}}</b></p> 
+    <p class="card-text text-muted h5">{{i.comp_exp}}</p>
+    <p class="card-text text-muted h5">{{i.comp_loc}}</p>
+	</div>
+	</div>
+	</div>
+    {% endfor%}
+    {%endif%}
+</div>
+</div>
+</center>
+</body>
+</html>

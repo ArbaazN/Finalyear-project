@@ -1,0 +1,352 @@
+{% extends 'enroll/base.html'%}
+{% block style %}
+<style>
+	
+.row {
+  max-width: 114rem;
+  margin: 0 auto; }
+  
+	.Div{
+			   display: none;
+		   }
+   
+	.myDiv{
+			   display: none;
+		   }
+   
+   </style>
+{% endblock style %}
+
+{% block content %}
+
+
+
+<div class="page-content">
+	<!-- Section Banner -->
+	<div class="dez-bnr-inr dez-bnr-inr-md" style="background-image:url(static/enroll/images/main-slider/slide3.jpg);">
+		<div class="container">
+			<div class="dez-bnr-inr-entry align-m text-white">
+				<h1 style="font-weight: 700;">Find Your Best Suited Collages & Universities.</h2>
+				<center>
+					<div class="find-job-bx col-lg-8" >
+			
+					<form action="result" method="post" enctype="multipart/form-data">
+						{% csrf_token %}
+						{{form}}
+						<div class="row" >
+						<div class="col-lg-12">
+								<div class="form-group">
+									<select name="select" id="ess">
+										<option value="base">Select</option>
+										<option value="0">Check Engineering colleges</option>
+										<option value="1">Check Pharmacy colleges</option>
+										<option value="2">Check Architecture colleges</option>
+										<option value="3">Check M.B.B.S colleges</option>
+									</select>
+								</div>
+							</div>
+							<div class="col-lg-12">
+								<div class="form-group">
+									<div class="Div" id="eng" style="display: none;">
+									<select id="engg" name="E" style="text-align:center;">
+										<option value="11">Select an Option</option>
+										<option value="4" id="cc">Chemical Engineering</option>
+										<option value="5">Civil Engineering</option>
+										<option value="6">Computer Engineering</option>
+										<option value="7">Electrical Engineering</option>
+										<option value="8">Electronics and Communication Engineering</option>
+										<option value="9">IT</option>
+										<option value="10">Mechanical Engineering</option>
+							
+									</select>
+								</div>
+								</div>
+							</div>
+							<div class="col-lg-12" >
+								<div class="form-group">
+
+
+									<div class="iDiv" id="score1" style="display:none;">
+									<label></label>
+									<div class="input-group">
+										<input type="text" class="form-control"  placeholder="Enter JRE/CET score for Chemical">
+										<div class="input-group-append">
+										  <span class="input-group-text" name="jc1" id="jc1"><i class="fa fa-search"></i></span>
+										</div>
+									</div>
+									</div>
+
+
+									
+									<div class="iDiv" id="score2" style="display:none;">
+										<label></label>
+										<div class="input-group">
+											<input type="text" class="form-control"  placeholder="Enter JRE/CET score for Civil">
+											<div class="input-group-append">
+											  <span class="input-group-text" name="jc2" id="jc2"><i class="fa fa-search"></i></span>
+											</div>
+										</div>
+										</div>
+
+									
+										<div class="iDiv" id="score3" style="display:none;">
+											<label></label>
+											<div class="input-group">
+												<input type="text" class="form-control"  placeholder="Enter JRE/CET score Computer">
+												<div class="input-group-append">
+												  <span class="input-group-text" name="jc3" id="jc3"><i class="fa fa-search"></i></span>
+												</div>
+											</div>
+											</div>
+
+										
+									<div class="iDiv" id="score4" style="display:none;">
+										<label></label>
+										<div class="input-group">
+											<input type="text" class="form-control"  placeholder="Enter JRE/CET score for Electrical">
+											<div class="input-group-append">
+											  <span class="input-group-text" name="jc4" id="jc4"><i class="fa fa-search"></i></span>
+											</div>
+										</div>
+										</div>
+
+									
+										<div class="iDiv" id="score5" style="display:none;">
+											<label></label>
+											<div class="input-group">
+												<input type="text" class="form-control"  placeholder="Enter JRE/CET score for Electronics and Communication">
+												<div class="input-group-append">
+												  <span class="input-group-text" name="jc5" id="jc5"><i class="fa fa-search"></i></span>
+												</div>
+											</div>
+											</div>
+
+										
+									<div class="iDiv" id="score6" style="display:none;">
+										<label></label>
+										<div class="input-group">
+											<input type="text" class="form-control"  placeholder="Enter JRE/CET score for IT">
+											<div class="input-group-append">
+											  <span class="input-group-text" name="jc6" id="jc6"><i class="fa fa-search"></i></span>
+											</div>
+										</div>
+										</div>
+
+									
+										<div class="iDiv" id="score7" style="display:none;">
+											<label></label>
+											<div class="input-group">
+												<input type="text" class="form-control"  placeholder="Enter JRE/CET score for Mechanical">
+												<div class="input-group-append">
+												  <span class="input-group-text" name="jc7" id="jc7"><i class="fa fa-search"></i></span>
+												</div>
+											</div>
+										</div>
+
+									<div class="myDiv" id="score8">
+									<label ></label>
+									<div class="input-group">
+										<input type="text" class="form-control"  placeholder="Enter MHCET score">
+										<div class="input-group-append">
+										  <span class="input-group-text" name="ct" id="ct"><i class="fa fa-search"></i></span>
+										</div>
+									</div>
+									</div>
+
+									<div class="myDiv" id="score9">
+									<label ></label>
+									<div class="input-group">
+										<input type="text" class="form-control"  placeholder="Enter NATA score">
+										<div class="input-group-append">
+										  <span class="input-group-text" name="nata" id="nata"><i class="fa fa-search"></i></span>
+										</div>
+									</div>
+									</div>
+
+
+									<div class="myDiv" id="score00">
+									<label > </label>
+									<div class="input-group" >
+										<input type="text" class="form-control"  placeholder="Enter NEET score">
+										<div class="input-group-append">
+										  <span class="input-group-text" id="neet" name="neet"><i class="fa fa-search"></i></span>
+										</div>
+									</div>
+									</div>
+
+								</div>
+							</div>
+						
+							
+							<div class="col-lg-12">
+								<input type="submit" class="site-button whatsapp button btn-block" name="sb" value="Predict">
+							</div>
+						</form><br><br><br>
+						</div>
+					
+				</div>
+			</center>
+			</div>
+		</div>
+	</div>
+	<br><br>
+	<div class="clgs">
+		<div class="col-sm-12 col-md-6 col-lg-3 pb-4">
+		<div class="card">
+		<img src="{{college_img.0}}" class="card-img-top">
+		<div class="card-body">
+		  <h4 class="card-title"><b>{{college_name.0}}</b></h4> 
+		  <p class="card-text text-muted h5"><b>{{college_course.0}}</b>{{college_fees.0}}</p>
+		  <p class="card-text text-muted h5"><b>{{college_loc.0}}</b></p> 
+		</div>
+	  </div>
+	  </div>
+	  
+	  <div class="col-sm-12 col-md-6 col-lg-3 pb-4">
+		<div class="card">
+		<img src="{{college_img.1}}" class="card-img-top">
+		<div class="card-body">
+		  <h4 class="card-title"><b>{{college_name.1}}</b></h4> 
+		  <p class="card-text text-muted h5"><b>{{AllIndia.1}}</b></p> 
+		</div>
+	  </div>
+	  </div>
+	  
+	  <div class="col-sm-12 col-md-6 col-lg-3 pb-4">
+		<div class="card">
+		<img src="{{college_img.2}}" class="card-img-top">
+		<div class="card-body">
+		  <h4 class="card-title"><b>{{college_name.2}}</b></h4> 
+		  <p class="card-text text-muted h5"><b>{{AllIndia.2}}</b></p> 
+		</div>
+	  </div>
+	  </div>
+	  
+	  <div class="col-sm-12 col-md-6 col-lg-3 pb-4">
+		<div class="card">
+		<img src="{{college_img.3}}" class="card-img-top">
+		<div class="card-body">
+		  <h4 class="card-title"><b>{{college_name.3}}</b></h4> 
+		  <p class="card-text text-muted h5"><b>{{AllIndia.3}}</b></p> 
+		</div>
+	  </div>
+	  </div>
+	  
+	  <div class="col-sm-12 col-md-6 col-lg-3 pb-4">
+		<div class="card">
+		<img src="{{college_img.4}}" class="card-img-top">
+		<div class="card-body">
+		  <h4 class="card-title"><b>{{college_name.4}}</b></h4> 
+		  <p class="card-text text-muted h5"><b>{{AllIndia.4}}</b></p> 
+		</div>
+	  </div>
+	  </div>
+	  
+	  <div class="col-sm-12 col-md-6 col-lg-3 pb-4">
+		<div class="card">
+		<img src="{{college_img.5}}" class="card-img-top">
+		<div class="card-body">
+		  <h4 class="card-title"><b>{{college_name.5}}</b></h4> 
+		  <p class="card-text text-muted h5"><b>{{AllIndia.5}}</b></p> 
+		</div>
+	  </div>
+	  </div>
+	  
+	  <div class="col-sm-12 col-md-6 col-lg-3 pb-4">
+		<div class="card">
+		<img src="{{college_img.6}}" class="card-img-top">
+		<div class="card-body">
+		  <h4 class="card-title"><b>{{college_name.6}}</b></h4> 
+		  <p class="card-text text-muted h5"><b>{{AllIndia.6}}</b></p> 
+		</div>
+	  </div>
+	  </div>
+	  
+	  <div class="col-sm-12 col-md-6 col-lg-3 pb-4">
+		<div class="card">
+		<img src="{{college_img.7}}" class="card-img-top">
+		<div class="card-body">
+		  <h4 class="card-title"><b>{{college_name.7}}</b></h4> 
+		  <p class="card-text text-muted h5"><b>{{AllIndia.7}}</b></p> 
+		</div>
+	  </div>
+	  </div>
+	  
+	  </div>
+
+        </div>
+        {% endblock content %}
+		{% block script %}
+		
+		
+		
+		<script type="text/javascript">
+			$(document).ready(function(){
+        $("#ess").change(function(){
+            $( "select option:selected").each(function(){
+                if($(this).attr("value")=="0"){
+                    $(".myDiv").hide();
+                    $("#eng").show();
+                } 
+                
+                if($(this).attr("value")=="1"){
+                    $(".myDiv").hide();
+                    $("#eng").hide();
+                    $(".Div").hide();
+                    $(".iDiv").hide();                    
+                    $("#score8").show();
+                }
+                if($(this).attr("value")=="2"){
+                    $(".myDiv").hide();
+                    $("#score9").show();
+                    $("#eng").hide();
+                    $(".iDiv").hide();                    
+                    $(".Div").hide();                
+                }
+                if($(this).attr("value")=="3"){
+                    $(".myDiv").hide();
+                    $("#score00").show();
+                    $("#eng").hide();
+                    $(".iDiv").hide();                    
+                    $(".Div").hide(); 
+                } 
+            });
+        }).change();
+
+
+    $('#eng').change(function(){
+      $( "select option:selected").each(function(){
+        if($(this).attr("value")=="4"){
+                    $(".iDiv").hide();
+                    $("#score1").show();
+          }
+        if($(this).attr("value")=="5"){
+                    $(".iDiv").hide();
+                    $("#score2").show();
+          }
+        if($(this).attr("value")=="6"){
+                    $(".iDiv").hide();          
+                    $("#score3").show();
+          }
+        if($(this).attr("value")=="7"){
+                    $(".iDiv").hide();
+                    $("#score4").show();
+          }
+        if($(this).attr("value")=="8"){
+                    $(".iDiv").hide();
+                    $("#score5").show();
+          }
+        if($(this).attr("value")=="9"){
+                    $(".iDiv").hide();
+                    $("#score6").show();
+          }
+        if($(this).attr("value")=="10"){
+                    $(".iDiv").hide();
+                    $("#score7").show();
+          }
+      });
+    });
+  });
+			
+			</script>
+		{% endblock script %}

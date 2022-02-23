@@ -1,0 +1,23 @@
+from django.contrib import admin
+from django.urls import path, include
+from . import views
+from django.conf import settings
+from django.conf.urls.static import static
+
+
+urlpatterns = [
+    path('', views.home,name="home"),
+    path('signup',views.signup, name="signup"),
+    path('signin',views.signin, name="signin"),
+    path('signout',views.signout, name="signout"),
+    path('job_search',views.job_search,name='job_search'),
+    path('search',views.search,name='search'),
+    path('pagination',views.pagination,name='pagination'),
+    #path('predict_page',views.predict_page,name='predict_page'),
+    path('predict/',views.predict, name='predict'),
+    # path('predict1/',views.predict1, name='predict1'),
+    path('predict/result',views.result),
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
