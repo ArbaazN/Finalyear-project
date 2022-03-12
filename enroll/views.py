@@ -30,7 +30,12 @@ import csv
 @csrf_protect
 
 def predict(request):
-	return render(request,"enroll/predict.html")
+	if request.user.is_authenticated:
+		return render(request,"enroll/predict.html")
+	else:
+		messages.info(request,"Please Login In Order To Access the Features")
+		return redirect('home')
+
 def result(request):
 	if request.method=='POST' and request.POST.get('nata'):
 		df=pd.read_csv(r"C:\Users\admin\Desktop\Finalyear\data\12-ARCH-final-done.csv")
@@ -66,7 +71,7 @@ def result(request):
 		# 	minr.append(result_final.iloc[i][7])
 		result_final=result_final.to_json(orient='records')
 		data=[]
-		data=json.loads(result_final)		
+		data=json.loads(result_final)	
 		return render(request,'enroll/predict.html',{'data':data})
 
 	if request.method=='POST' and request.POST.get('ct'):
@@ -104,105 +109,109 @@ def result(request):
 		return render(request,'enroll/predict.html',{"college_img":ig,"college_name":names,"college_fees":fees,"AllIndia":Ind,"Open":opn,"Minority":minr})
 	#return render(request,'enroll/predict.html')
 def job_search(request):
-	if request.method == 'POST' and request.FILES['myfile']:
-		myfile = request.FILES['myfile']
-		fs = FileSystemStorage()
-		filename = fs.save(myfile.name, myfile)
-		uploaded_file_path = fs.path(filename)
-		uploaded_file_url = fs.url(filename)
-		skillDataset = pd.read_csv(r"C:\Users\admin\Desktop\companies_data.csv")
-		skills = list(skillDataset['comp_skills'])
-		cleanedskillList = [x for x in skills if str(x) != 'nan']
-		cleanedskillList = [i.split()[0] for i in skills]
-		skillsList=cleanedskillList
+	if request.user.is_authenticated:
+		if request.method == 'POST' and request.FILES['myfile']:
+			myfile = request.FILES['myfile']
+			fs = FileSystemStorage()
+			filename = fs.save(myfile.name, myfile)
+			uploaded_file_path = fs.path(filename)
+			uploaded_file_url = fs.url(filename)
+			skillDataset = pd.read_csv(r"C:\Users\admin\Desktop\companies_data.csv")
+			skills = list(skillDataset['comp_skills'])
+			cleanedskillList = [x for x in skills if str(x) != 'nan']
+			cleanedskillList = [i.split()[0] for i in skills]
+			skillsList=cleanedskillList
 
-		newResumeTxtFile = open('sample.txt', 'w',encoding='utf-8')
-		resumeFile =uploaded_file_path
-		resumeFileData = parser.from_file(resumeFile)
-		fileContent = resumeFileData['content']
-		newResumeTxtFile.write(fileContent)
+			newResumeTxtFile = open('sample.txt', 'w',encoding='utf-8')
+			resumeFile =uploaded_file_path
+			resumeFileData = parser.from_file(resumeFile)
+			fileContent = resumeFileData['content']
+			newResumeTxtFile.write(fileContent)
 
-		obtainedResumeText = fileContent
+			obtainedResumeText = fileContent
 
-		firstLetterCapitalizedObtainedResumeText = []
-		firstLetterCapitalizedText,obtainedResumeTextLowerCase,obtainedResumeTextUpperCase = CapitalizeFirstLetter(obtainedResumeText)
+			firstLetterCapitalizedObtainedResumeText = []
+			firstLetterCapitalizedText,obtainedResumeTextLowerCase,obtainedResumeTextUpperCase = CapitalizeFirstLetter(obtainedResumeText)
+			
+			obtainedResumeText = obtainedResumeTextLowerCase + obtainedResumeTextUpperCase + firstLetterCapitalizedText
+			# # Removing numbers from text file
+			# obtainedResumeText = re.sub(r'\d+','',obtainedResumeText)
+			# Remove punctuation from the text files
+			obtainedResumeText = obtainedResumeText.translate(str.maketrans('','',string.punctuation))
+
+			filteredTextForSkillExtraction = stopWordRemoval(obtainedResumeText)
+			resumeTechnicalSkillSpecificationList = {'Skill':skillsList}
+			technicalSkillScore , technicalSkillExtracted = ResumeSkillExtractor(resumeTechnicalSkillSpecificationList,filteredTextForSkillExtraction)
+			
+			dataList = {"candi_skills":technicalSkillExtracted}#,'Company_name':compname,'Job_role':comprole,'Job_loc':comploc}
+			softwareDevelopemtTechnicalSkills = pd.DataFrame(dataList)
+
+			df=softwareDevelopemtTechnicalSkills.explode('candi_skills')
+
+			df.drop_duplicates(keep='first',inplace=True)
+
+			df1 = pd.read_csv(r"C:\Users\admin\Desktop\companies_data.csv")
+
+			df1['comp_skills'] = df1['comp_skills'].str.split()
+			df1['matchedName'] = df1['comp_skills'].apply(lambda x: [item for item in x if item in df['candi_skills'].tolist()])
+
+			df1['mskills'] = [','.join(map(str, l)) for l in df1['matchedName']]
+			df1.drop(['matchedName'],axis=1,inplace=True)
+			df1['mskills'].replace('',np.nan,inplace=True)
+			df1=df1.dropna()
+
+			df1['cmp_skills'] = [','.join(map(str, l)) for l in df1['comp_skills']]
+			df1.drop(['comp_skills'],axis=1,inplace=True)
+			df1.drop_duplicates(keep='first',inplace=True)
+
+			dfz = df1.reset_index(drop=True)
+			dfc=dfz.to_csv("C:\\Users\\admin\\Desktop\\Finalyear\\search_file.csv",index=False)
+
+			result_final = dfz
+			# name=[]
+			# role = []
+			# exp = []
+			# loc = []
+			# desc = []
+			# for i in range(len(result_final)):
+			# 	name.append(result_final.iloc[i][1])
+			# 	role.append(result_final.iloc[i][2])
+			# 	exp.append(result_final.iloc[i][3])
+			# 	loc.append(result_final.iloc[i][4])
+			# 	desc.append(result_final.iloc[i][5])
+			result_final=result_final.to_json(orient='records')
+			data=[]
+			data=json.loads(result_final)
+
+			# for i in range(len(dfz['comp_name'])):
+			# 	# Insert in the database
+			# 	srs.objects.create(comp_name = dfz['comp_name'][i], comp_role = dfz['comp_role'][i], comp_exp = dfz['comp_exp'][i], comp_loc = dfz['comp_loc'][i])
+			# try:
+			#     obj = srs.objects.get(comp_name = dfz['comp_name'][i], comp_role = dfz['comp_role'][i], comp_exp = dfz['comp_exp'][i], comp_loc = dfz['comp_loc'][i])
+			#     for key, value in defaults.items():
+			#         setattr(obj, key, value)
+			#     obj.save()
+			# except srs.DoesNotExist:
+			#     new_values = {'first_name': 'John', 'last_name': 'Lennon'}
+			#     new_values.update(defaults)
+			#     obj = srs(**new_values)
+			#     obj.save()
+			rd=pd.read_csv(r"search_file.csv")
 		
-		obtainedResumeText = obtainedResumeTextLowerCase + obtainedResumeTextUpperCase + firstLetterCapitalizedText
-		# # Removing numbers from text file
-		# obtainedResumeText = re.sub(r'\d+','',obtainedResumeText)
-		 # Remove punctuation from the text files
-		obtainedResumeText = obtainedResumeText.translate(str.maketrans('','',string.punctuation))
+			jobs = dfz.to_dict(orient='records')
+			jobs = rd.to_dict(orient='records')
+			job_paginator = Paginator(jobs,20)
 
-		filteredTextForSkillExtraction = stopWordRemoval(obtainedResumeText)
-		resumeTechnicalSkillSpecificationList = {'Skill':skillsList}
-		technicalSkillScore , technicalSkillExtracted = ResumeSkillExtractor(resumeTechnicalSkillSpecificationList,filteredTextForSkillExtraction)
-		
-		dataList = {"candi_skills":technicalSkillExtracted}#,'Company_name':compname,'Job_role':comprole,'Job_loc':comploc}
-		softwareDevelopemtTechnicalSkills = pd.DataFrame(dataList)
+			page_num = request.GET.get('page')
 
-		df=softwareDevelopemtTechnicalSkills.explode('candi_skills')
+			page = job_paginator.get_page(page_num) 
 
-		df.drop_duplicates(keep='first',inplace=True)
-
-		df1 = pd.read_csv(r"C:\Users\admin\Desktop\companies_data.csv")
-
-		df1['comp_skills'] = df1['comp_skills'].str.split()
-		df1['matchedName'] = df1['comp_skills'].apply(lambda x: [item for item in x if item in df['candi_skills'].tolist()])
-
-		df1['mskills'] = [','.join(map(str, l)) for l in df1['matchedName']]
-		df1.drop(['matchedName'],axis=1,inplace=True)
-		df1['mskills'].replace('',np.nan,inplace=True)
-		df1=df1.dropna()
-
-		df1['cmp_skills'] = [','.join(map(str, l)) for l in df1['comp_skills']]
-		df1.drop(['comp_skills'],axis=1,inplace=True)
-		df1.drop_duplicates(keep='first',inplace=True)
-
-		dfz = df1.reset_index(drop=True)
-		dfc=dfz.to_csv("C:\\Users\\admin\\Desktop\\Finalyear\\search_file.csv",index=False)
-
-		result_final = dfz
-		# name=[]
-		# role = []
-		# exp = []
-		# loc = []
-		# desc = []
-		# for i in range(len(result_final)):
-		# 	name.append(result_final.iloc[i][1])
-		# 	role.append(result_final.iloc[i][2])
-		# 	exp.append(result_final.iloc[i][3])
-		# 	loc.append(result_final.iloc[i][4])
-		# 	desc.append(result_final.iloc[i][5])
-		result_final=result_final.to_json(orient='records')
-		data=[]
-		data=json.loads(result_final)
-
-		# for i in range(len(dfz['comp_name'])):
-		# 	# Insert in the database
-		# 	srs.objects.create(comp_name = dfz['comp_name'][i], comp_role = dfz['comp_role'][i], comp_exp = dfz['comp_exp'][i], comp_loc = dfz['comp_loc'][i])
-		# try:
-		#     obj = srs.objects.get(comp_name = dfz['comp_name'][i], comp_role = dfz['comp_role'][i], comp_exp = dfz['comp_exp'][i], comp_loc = dfz['comp_loc'][i])
-		#     for key, value in defaults.items():
-		#         setattr(obj, key, value)
-		#     obj.save()
-		# except srs.DoesNotExist:
-		#     new_values = {'first_name': 'John', 'last_name': 'Lennon'}
-		#     new_values.update(defaults)
-		#     obj = srs(**new_values)
-		#     obj.save()
-		rd=pd.read_csv(r"search_file.csv")
-	
-		jobs = dfz.to_dict(orient='records')
-		jobs = rd.to_dict(orient='records')
-		job_paginator = Paginator(jobs,20)
-
-		page_num = request.GET.get('page')
-
-		page = job_paginator.get_page(page_num) 
-
-		return render(request,'enroll/job_search.html',{'dd':data,'uploaded_file_url': uploaded_file_url,'count' : job_paginator.count,
-	        'page' : page})
-		#{'comp_name':name,'comp_role':role,'comp_exp':exp,'comp_loc':loc,'comp_desc':desc}	'dd':data,	
+			return render(request,'enroll/job_search.html',{'dd':data,'uploaded_file_url': uploaded_file_url,'count' : job_paginator.count,
+				'page' : page})
+			#{'comp_name':name,'comp_role':role,'comp_exp':exp,'comp_loc':loc,'comp_desc':desc}	'dd':data,	
+	else:
+		messages.info(request,"Please Login In Order To Access the Features")
+		return redirect('home')		
 	return render(request,'enroll/job_search.html')
 
 def loadSkillDataset():
@@ -288,9 +297,15 @@ def search(request):
 		result_final=result_final.reset_index().to_json(orient='records')
 		data=[]
 		data=json.loads(result_final)
+
+		job_paginator = Paginator(data, 20)
+
+		page_num = request.GET.get('page')
+
+		page = job_paginator.get_page(page_num)
 		# for i in range(len(result_final)):
 		# 	name.append(result_final.iloc[i][1])
-		return render(request,'enroll/search.html',{'d':data,'name':ip})
+		return render(request,'enroll/search.html',{'d':data,'name':ip,'page':page})
 	return render(request,'enroll/search.html')
 
 def pagination(request):
@@ -308,9 +323,25 @@ def pagination(request):
 		'page' : page
 	}
 	return render(request, 'enroll/pagination.html', context)
+def sea_pag(request):
+	rd=pd.read_csv(r"search_file.csv")
+	jobs = rd.to_dict(orient='records')
+
+	job_paginator = Paginator(jobs, 20)
+
+	page_num = request.GET.get('page')
+
+	page = job_paginator.get_page(page_num)
+
+	context = {
+		'count' : job_paginator.count,
+		'page' : page
+	}
+	return render(request, 'enroll/pagination.html', context)
 def home(request):
     return render(request,"enroll/index.html")
-
+def rsm_a(request):
+    return render(request,"enroll/rsm_a.html")
 # def job_search(request):
 #     return render(request,"enroll/job_search.html")
  
@@ -360,7 +391,7 @@ def signin(request):
         if user is not None:
             login(request,user)
             fname=user.first_name
-            messages.info(request,"Hello "+fname)
+            messages.success(request,"Hello "+fname)
             return render(request,"enroll/index.html",{'fname':fname})
         else:
             messages.error(request,"Bad Creadentials!")
