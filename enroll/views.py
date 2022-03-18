@@ -4,7 +4,6 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate ,login, logout 
-
 from django.shortcuts import render;
 import json # will be needed for saving preprocessing details
 import numpy as np # for data manipulation
@@ -19,6 +18,7 @@ from django.views.generic import TemplateView
 from collections import Counter
 import re
 import nltk
+import spacy
 from nltk.corpus import stopwords
 import string
 from tika import parser
@@ -27,69 +27,49 @@ from django.http import HttpResponseRedirect
 import json
 from django.core.paginator import Paginator
 import csv
+import PyPDF2
+from pdf2docx import parse ,Converter
+import docx2txt
+from pdfminer.high_level import extract_text
+from spacy.matcher import Matcher
+nlp = spacy.load('en_core_web_sm')
+matcher = Matcher(nlp.vocab)
+data=[]
 @csrf_protect
-
 def predict(request):
 	if request.user.is_authenticated:
 		return render(request,"enroll/predict.html")
 	else:
 		messages.info(request,"Please Login In Order To Access the Features")
 		return redirect('home')
-
+"""-----------------------------------------------------------------------------"""
 def result(request):
 	if request.method=='POST' and request.POST.get('nata'):
 		df=pd.read_csv(r"C:\Users\admin\Desktop\Finalyear\data\12-ARCH-final-done.csv")
 		count = CountVectorizer(stop_words='english')
 		count_matrix = count.fit_transform(df[['AllIndia']])
-
 		cosine_sim2 = cosine_similarity(count_matrix, count_matrix)
-
 		indices = pd.Series(df.index, index=df['college_name'])
 		clgs = [df['AllIndia'][i] for i in range(len(df['AllIndia']))]
-
 		score=float(request.POST.get('nata',None))
 		cosine_sim = cosine_similarity(count_matrix, count_matrix)
 		idx=df.loc[df.AllIndia<=score,['college_img','college_name','college_loc','college_course','college_fees','AllIndia','Open','Minority']]
-
 		result_final = idx
-		# ig=[]
-		# names = []
-		# course=[]
-		# locc=[]
-		# fees = []
-		# Ind = []
-		# opn = []
-		# minr = []
-		# for i in range(len(result_final)):
-		# 	ig.append(result_final.iloc[i][0])
-		# 	names.append(result_final.iloc[i][1])
-		# 	locc.append(result_final.iloc[i][2])
-		# 	course.append(result_final.iloc[i][3])
-		# 	fees.append(result_final.iloc[i][4])
-		# 	Ind.append(result_final.iloc[i][5])
-		# 	opn.append(result_final.iloc[i][6])
-		# 	minr.append(result_final.iloc[i][7])
 		result_final=result_final.to_json(orient='records')
 		data=[]
 		data=json.loads(result_final)	
 		return render(request,'enroll/predict.html',{'data':data})
-
 	if request.method=='POST' and request.POST.get('ct'):
-		df=pd.read_csv(r"C:\Users\admin\Desktop\Finalyear\data\sample.csv")
-
+		df=pd.read_csv(r"D:\Users\sahil\Desktop\Final_year_project\Finalyear-project-master\data\sample.csv")
 		count = CountVectorizer(stop_words='english')
 		count_matrix = count.fit_transform(df[['AllIndia']])
-
 		cosine_sim2 = cosine_similarity(count_matrix, count_matrix)
-
 		indices = pd.Series(df.index, index=df['college_name'])
 		clgs = [df['AllIndia'][i] for i in range(len(df['AllIndia']))]
-
 		score=float(request.POST.get('ct',''))
 		cosine_sim = cosine_similarity(count_matrix, count_matrix)
 		idx=df.loc[df.AllIndia<=score,['college_img','college_name','college_fees','AllIndia','Open','Minority']]
 		idx=idx[:10]
-
 		result_final = idx
 		ig=[]
 		names = []
@@ -107,7 +87,7 @@ def result(request):
 				
 		
 		return render(request,'enroll/predict.html',{"college_img":ig,"college_name":names,"college_fees":fees,"AllIndia":Ind,"Open":opn,"Minority":minr})
-	#return render(request,'enroll/predict.html')
+"""-------------------------------------------------------------------------------------------------------------"""
 def job_search(request):
 	if request.user.is_authenticated:
 		if request.method == 'POST' and request.FILES['myfile']:
@@ -116,106 +96,59 @@ def job_search(request):
 			filename = fs.save(myfile.name, myfile)
 			uploaded_file_path = fs.path(filename)
 			uploaded_file_url = fs.url(filename)
-			skillDataset = pd.read_csv(r"C:\Users\admin\Desktop\companies_data.csv")
+			skillDataset = pd.read_csv(r"D:\Users\sahil\Desktop\Final_year_project\Finalyear-project-master\data\companies_data.csv")
 			skills = list(skillDataset['comp_skills'])
 			cleanedskillList = [x for x in skills if str(x) != 'nan']
 			cleanedskillList = [i.split()[0] for i in skills]
 			skillsList=cleanedskillList
-
 			newResumeTxtFile = open('sample.txt', 'w',encoding='utf-8')
 			resumeFile =uploaded_file_path
 			resumeFileData = parser.from_file(resumeFile)
 			fileContent = resumeFileData['content']
 			newResumeTxtFile.write(fileContent)
-
 			obtainedResumeText = fileContent
-
 			firstLetterCapitalizedObtainedResumeText = []
 			firstLetterCapitalizedText,obtainedResumeTextLowerCase,obtainedResumeTextUpperCase = CapitalizeFirstLetter(obtainedResumeText)
-			
 			obtainedResumeText = obtainedResumeTextLowerCase + obtainedResumeTextUpperCase + firstLetterCapitalizedText
-			# # Removing numbers from text file
-			# obtainedResumeText = re.sub(r'\d+','',obtainedResumeText)
-			# Remove punctuation from the text files
 			obtainedResumeText = obtainedResumeText.translate(str.maketrans('','',string.punctuation))
-
 			filteredTextForSkillExtraction = stopWordRemoval(obtainedResumeText)
 			resumeTechnicalSkillSpecificationList = {'Skill':skillsList}
 			technicalSkillScore , technicalSkillExtracted = ResumeSkillExtractor(resumeTechnicalSkillSpecificationList,filteredTextForSkillExtraction)
-			
 			dataList = {"candi_skills":technicalSkillExtracted}#,'Company_name':compname,'Job_role':comprole,'Job_loc':comploc}
 			softwareDevelopemtTechnicalSkills = pd.DataFrame(dataList)
-
 			df=softwareDevelopemtTechnicalSkills.explode('candi_skills')
-
 			df.drop_duplicates(keep='first',inplace=True)
-
-			df1 = pd.read_csv(r"C:\Users\admin\Desktop\companies_data.csv")
-
+			df1 = pd.read_csv(r"D:\Users\sahil\Desktop\Final_year_project\Finalyear-project-master\data\companies_data.csv")
 			df1['comp_skills'] = df1['comp_skills'].str.split()
 			df1['matchedName'] = df1['comp_skills'].apply(lambda x: [item for item in x if item in df['candi_skills'].tolist()])
-
 			df1['mskills'] = [','.join(map(str, l)) for l in df1['matchedName']]
 			df1.drop(['matchedName'],axis=1,inplace=True)
 			df1['mskills'].replace('',np.nan,inplace=True)
 			df1=df1.dropna()
-
 			df1['cmp_skills'] = [','.join(map(str, l)) for l in df1['comp_skills']]
 			df1.drop(['comp_skills'],axis=1,inplace=True)
 			df1.drop_duplicates(keep='first',inplace=True)
-
 			dfz = df1.reset_index(drop=True)
 			dfc=dfz.to_csv("C:\\Users\\admin\\Desktop\\Finalyear\\search_file.csv",index=False)
-
 			result_final = dfz
-			# name=[]
-			# role = []
-			# exp = []
-			# loc = []
-			# desc = []
-			# for i in range(len(result_final)):
-			# 	name.append(result_final.iloc[i][1])
-			# 	role.append(result_final.iloc[i][2])
-			# 	exp.append(result_final.iloc[i][3])
-			# 	loc.append(result_final.iloc[i][4])
-			# 	desc.append(result_final.iloc[i][5])
 			result_final=result_final.to_json(orient='records')
 			data=[]
 			data=json.loads(result_final)
-
-			# for i in range(len(dfz['comp_name'])):
-			# 	# Insert in the database
-			# 	srs.objects.create(comp_name = dfz['comp_name'][i], comp_role = dfz['comp_role'][i], comp_exp = dfz['comp_exp'][i], comp_loc = dfz['comp_loc'][i])
-			# try:
-			#     obj = srs.objects.get(comp_name = dfz['comp_name'][i], comp_role = dfz['comp_role'][i], comp_exp = dfz['comp_exp'][i], comp_loc = dfz['comp_loc'][i])
-			#     for key, value in defaults.items():
-			#         setattr(obj, key, value)
-			#     obj.save()
-			# except srs.DoesNotExist:
-			#     new_values = {'first_name': 'John', 'last_name': 'Lennon'}
-			#     new_values.update(defaults)
-			#     obj = srs(**new_values)
-			#     obj.save()
 			rd=pd.read_csv(r"search_file.csv")
-		
 			jobs = dfz.to_dict(orient='records')
 			jobs = rd.to_dict(orient='records')
 			job_paginator = Paginator(jobs,20)
-
 			page_num = request.GET.get('page')
-
 			page = job_paginator.get_page(page_num) 
-
 			return render(request,'enroll/job_search.html',{'dd':data,'uploaded_file_url': uploaded_file_url,'count' : job_paginator.count,
-				'page' : page})
-			#{'comp_name':name,'comp_role':role,'comp_exp':exp,'comp_loc':loc,'comp_desc':desc}	'dd':data,	
+				'page' : page})			
 	else:
 		messages.info(request,"Please Login In Order To Access the Features")
 		return redirect('home')		
 	return render(request,'enroll/job_search.html')
-
+"""-----------------------------------------------------------------------------"""
 def loadSkillDataset():
-	skillDataset = pd.read_csv(r"C:\Users\admin\Desktop\companies_data.csv")
+	skillDataset = pd.read_csv(r"D:\Users\sahil\Desktop\Final_year_project\Finalyear-project-master\data\companies_data.csv")
 	skills = list(skillDataset['comp_skills'])
 	name = list(skillDataset['comp_name'])
 	role = list(skillDataset['comp_role'])
@@ -225,12 +158,11 @@ def loadSkillDataset():
 	cleanedroleList = [x for x in role if str(x) != 'nan']
 	cleanedlocList= [x for x in loc if str(x) != 'nan']
 	return cleanedskillList , cleanednameList, cleanedroleList,cleanedlocList
-
+"""-----------------------------------------------------------------------------"""
 skillsList , nameList, roleList, locList = loadSkillDataset()
-
 obtainedResumeText = ''
-
 firstLetterCapitalizedObtainedResumeText = []
+"""-----------------------------------------------------------------------------"""
 def CapitalizeFirstLetter(obtainedResumeText):
 	capitalizingString = " "
 	obtainedResumeTextLowerCase = obtainedResumeText.lower()
@@ -240,13 +172,7 @@ def CapitalizeFirstLetter(obtainedResumeText):
 		firstLetterCapitalizedObtainedResumeText.append(i.capitalize())        
 	return (capitalizingString.join(firstLetterCapitalizedObtainedResumeText),obtainedResumeTextLowerCase,obtainedResumeTextUpperCase)
 firstLetterCapitalizedText,obtainedResumeTextLowerCase,obtainedResumeTextUpperCase = CapitalizeFirstLetter(obtainedResumeText)
-
-# obtainedResumeText = obtainedResumeTextLowerCase + obtainedResumeTextUpperCase + firstLetterCapitalizedText
-# # Removing numbers from text file
-# obtainedResumeText = re.sub(r'\d+','',obtainedResumeText)
-# # Remove punctuation from the text files
-# obtainedResumeText = obtainedResumeText.translate(str.maketrans('','',string.punctuation))
-
+"""-----------------------------------------------------------------------------"""
 def stopWordRemoval(obtainedResumeText):
 	stop_words = set(stopwords.words('english')) 
 	word_tokens = word_tokenize(obtainedResumeText) 
@@ -258,16 +184,13 @@ def stopWordRemoval(obtainedResumeText):
 		if w not in stop_words: 
 			filtered_sentence.append(w)
 	return(joinEmptyString.join(filtered_sentence))
-	
+"""-----------------------------------------------------------------------------"""
 filteredTextForSkillExtraction = stopWordRemoval(obtainedResumeText)
-
 resumeTechnicalSkillSpecificationList = {'Skill':skillsList,
 			'Company name':nameList}
-
+"""-----------------------------------------------------------------------------"""
 def ResumeSkillExtractor(resumeTechnicalSkillSpecificationList,filteredTextForSkillExtraction):
 	skill = 0
-	
-	# Create an empty list where the scores will be stored
 	skillScores = []
 	skillExtracted = []
 
@@ -282,8 +205,8 @@ def ResumeSkillExtractor(resumeTechnicalSkillSpecificationList,filteredTextForSk
 					skillWord.append(word)
 			skillExtracted.append(skillWord)
 			skillScores.append(skill)
-	return skillScores,skillExtracted#Compname,Comprole,Comploc
-
+	return skillScores,skillExtracted
+"""-----------------------------------------------------------------------------"""
 dfc=pd.read_csv(r"search_file.csv")
 regex=skillsList
 def search(request):
@@ -303,11 +226,9 @@ def search(request):
 		page_num = request.GET.get('page')
 
 		page = job_paginator.get_page(page_num)
-		# for i in range(len(result_final)):
-		# 	name.append(result_final.iloc[i][1])
 		return render(request,'enroll/search.html',{'d':data,'name':ip,'page':page})
 	return render(request,'enroll/search.html')
-
+"""-----------------------------------------------------------------------------"""
 def pagination(request):
 	rd=pd.read_csv(r"search_file.csv")
 	jobs = rd.to_dict(orient='records')
@@ -323,6 +244,7 @@ def pagination(request):
 		'page' : page
 	}
 	return render(request, 'enroll/pagination.html', context)
+"""-----------------------------------------------------------------------------"""
 def sea_pag(request):
 	rd=pd.read_csv(r"search_file.csv")
 	jobs = rd.to_dict(orient='records')
@@ -342,12 +264,7 @@ def home(request):
     return render(request,"enroll/index.html")
 def rsm_a(request):
     return render(request,"enroll/rsm_a.html")
-# def job_search(request):
-#     return render(request,"enroll/job_search.html")
- 
-
-
-
+"""-----------------------------------------------------------------------------"""
 def signup(request):
     if request.method == "POST":
         username = request.POST['username']
@@ -382,7 +299,7 @@ def signup(request):
         return redirect('signin')
 
     return render(request,"enroll/signup.html")
-
+"""-----------------------------------------------------------------------------"""
 def signin(request):
     if request.method =="POST":
         username = request.POST['username']
@@ -397,9 +314,252 @@ def signin(request):
             messages.error(request,"Bad Creadentials!")
             return redirect('signin')
     return render(request,"enroll/signin.html")
-
-
+"""-----------------------------------------------------------------------------"""
 def signout(request):
     logout(request)
     messages.success(request,"Logged Out succesfully")
     return redirect('home')
+"""-----------------------------------------------------------------------------"""
+def rsm_a(request):
+    if request.method == 'POST' and request.FILES['myfile']:
+        myfile = request.FILES['myfile']
+        fs = FileSystemStorage()
+        filename = fs.save(myfile.name,myfile)
+        uploaded_file_path = fs.path(filename)
+        uploaded_file_url = fs.url(filename)
+        extension=filename.split(".")[-1]
+        urls=extract_urls(uploaded_file_path)
+        if extension=='docx':
+            text=extract_text_from_docx(uploaded_file_path)
+        elif extension == 'pdf':
+            text=extract_text_from_pdf(uploaded_file_path)
+            convert_pdf_to_docx(uploaded_file_path)
+            resume_text=extract_text_from_docx('./demo.docx')    
+        else:
+            pass
+
+        """-----------0------------"""
+        name=proper_name(resume_text)
+        data.append(name)
+        """-----------1-------------"""
+        phone_number=extract_phone_number(text)
+        data.append(phone_number)
+        """-----------2-------------"""
+        emails=extract_emails(text)
+        data.append(emails[0])
+        """-----------3-------------"""
+        skills_list=list(extract_skills(text))
+        data.append(skills_list)
+        """-----------4-------------"""
+        skills_score=extract_skills_score(text)
+        data.append(skills_score)
+        """-----------5-------------"""
+        linkedin_urls=extract_linkedin(urls)
+        data.append(linkedin_urls)
+        """-----------6-------------"""
+        Github_urls=extract_Github(urls)
+        data.append(Github_urls)
+        """-----------7-------------"""
+        education_score=Validation_education(text)
+        data.append(education_score)       
+        if data:
+            return redirect('display')
+        else:
+            messages.info(request,'Blank Document')
+    return render(request, 'enroll/rsm_a.html')
+
+def display(request):
+    name=data[0]
+    phone_number=data[1]
+    email=data[2]
+    skills_list=data[3]
+    skils_score=data[4]
+    linkedin_url=data[5]
+    Github_url=data[6]
+    education_score=data[7]
+    data.clear()
+    return render(request,'enroll/display.html',{ 'name': name,'phone_number':phone_number,
+                                            'email':email,
+                                            'skills_list':skills_list,
+                                            'skills_score':skils_score,
+                                            'linkedin_url':linkedin_url,
+                                            'Github_url':Github_url,
+                                            'education_score':education_score
+                                        })
+
+def extract_text_from_pdf(pdf_path):
+    return extract_text(pdf_path)
+
+"""----------------------------------------------------------------------"""
+def extract_text_from_docx(docx_path):
+    txt = docx2txt.process(docx_path)
+    if txt:
+        return txt.replace('\t',' ')
+    return None
+"""----------------------------------------------------------------------"""
+def convert_pdf_to_docx(pdf_path):
+        docx_path='./demo.docx'
+        cv=Converter(pdf_path)
+        cv.convert(docx_path,start=0,end=None)
+        cv.close()
+
+
+"""----------------------------------------------------------------------"""
+#Extracting Name Method 1
+def extract_name(resume_text):
+    nlp_text = nlp(resume_text)
+    # First name and Last name are always Proper Nouns
+    pattern = [{'POS': 'PROPN'},{'POS': 'PROPN'},{'POS': 'PROPN'}]
+    matcher.add('NAME',[pattern])
+    matches = matcher(nlp_text)
+    for match_id, start, end in matches:
+        span = nlp_text[start:end]
+        return span.text
+#Cleaning and Comparing and returning name from Resume      
+def proper_name(resume_text):
+    name1=extract_name(resume_text)
+    if(name1 != None):
+        tokenize_name1=name1.split()
+        first_name1=tokenize_name1[0]
+        last_name1=tokenize_name1[1]
+    resume_text=resume_text.split()
+    first_name=resume_text[0]
+    last_name=resume_text[1]
+    full_name=first_name+' '+last_name
+    if(name1 == None):
+        return full_name
+    elif(first_name1==first_name and last_name1==last_name):
+        return name1
+    else:
+        return full_name
+
+"""----------------------------------------------------------------------"""
+#Mobile Number Extracting
+PHONE_REG = re.compile(r'[\+\(]?[1-9][0-9 .\-\(\)]{8,}[0-9]')
+def extract_phone_number(resume_text):
+    phone = re.findall(PHONE_REG, resume_text)
+
+    if phone:
+        number = ''.join(phone[0])
+
+        if resume_text.find(number) >= 0 and len(number) < 12:
+            return number
+    return None
+"""----------------------------------------------------------------------"""
+#Email Extracting
+EMAIL_REG = re.compile(r'[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+')
+def extract_emails(resume_text):
+    return re.findall(EMAIL_REG, resume_text)
+"""----------------------------------------------------------------------"""
+#Linked Extracting
+def extract_linkedin(urls):
+    for element in urls:
+        if((re.search('linkedin.com/in/', element)!= None) or (re.search('https://linkedin.com/in/', element)!= None)):
+            return element
+"""----------------------------------------------------------------------"""
+#Github Extracting
+def extract_Github(urls):
+    for el in urls:
+        if((re.search('github.com/', el)!= None) or (re.search('https://github.com/', el)!= None)):
+            return el
+"""----------------------------------------------------------------------"""
+#Education Extraction
+STOPWORDS = set(stopwords.words('english'))
+EDUCATION =["BACHELOR","MASTERS","DIPLOMA","HIGHER","SECONDARY","BCA","MCA","BSC","BE","B.E",'B.COM','M.COM'
+            "ME","M.E", "MS", "M.S", "BCS","B.C.S" ,"B.E.","M.E.","M.S.","B.C.S.","C.A","CA",'C.A.', 'MBA','PHD'
+            "B.TECH", "M.TECH", "BA","B.A","BS","B.S"
+            "SSC", "HSC", "CBSE", "ICSE", "X", "XII"]
+def extract_education(resume_text):
+    nlp_text = nlp(resume_text)
+    # Sentence Tokenizer
+    nlp_text = [sent.text.strip() for sent in nlp_text.sents]
+    edu = {}
+    # Extract education degree
+    for index, text in enumerate(nlp_text):
+        #print(index, text), print('-'*50)
+        for tex in text.split():
+            # Replace all special symbols
+            tex = re.sub(r'[?|$|.|!|,]', r'', tex)
+            if tex.upper() in EDUCATION and tex not in STOPWORDS:
+                edu[tex] = text + nlp_text[index + 1]
+                print(edu.keys())
+"""----------------------------------------------------------------------"""
+#Valdating That Education Section is Present OR NOT
+newData =[]
+def Validation_education(resume_text):
+    resume_text = resume_text.strip()
+    resume_text = resume_text.split()
+    for i in range(len(resume_text)):
+        resume_text[i]=resume_text[i].upper()
+    score = 0
+    for i in EDUCATION:
+        for j in resume_text:
+            if(i==j):
+                score += 1
+    return score
+"""----------------------------------------------------------------------"""
+def extract_institute(input_text):
+    data=pd.read_csv("./data/schools.csv")
+    school_DB=list(data.columns.values)
+
+
+
+"""----------------------------------------------------------------------"""
+
+#Extracting Skills and Skills Count From skills and experience Section
+def extract_skills(input_text):
+    length_of_list=0
+    data = pd.read_csv("./data/skills.csv") 
+    SKILLS_DB = list(data.columns.values)
+    stop_words = set(nltk.corpus.stopwords.words('english'))
+    word_tokens = nltk.tokenize.word_tokenize(input_text)
+ 
+    # remove the stop words
+    filtered_tokens = [w for w in word_tokens if w not in stop_words]
+ 
+    # remove the punctuation
+    filtered_tokens = [w for w in word_tokens if w.isalpha()]
+ 
+    # generate bigrams and trigrams (such as artificial intelligence)
+    bigrams_trigrams = list(map(' '.join, nltk.everygrams(filtered_tokens, 2, 3)))
+ 
+    # we create a set to keep the results in.
+    found_skills = set()
+ 
+    # we search for each token in our skills database
+    for token in filtered_tokens:
+        if token.lower() in SKILLS_DB:
+            found_skills.add(token)
+ 
+    # we search for each bigram and trigram in our skills database
+    for ngram in bigrams_trigrams:
+        if ngram.lower() in SKILLS_DB:
+            found_skills.add(ngram)
+    return found_skills
+"""----------------------------------------------------------------------"""
+#Skills Score 
+def extract_skills_score(resume_text):
+    skills_list=extract_skills(resume_text)
+    length_of_list=len(skills_list)
+    return length_of_list
+
+"""----------------------------------------------------------------------"""
+def extract_urls(pdf_path):
+    PDFFile = open(pdf_path,'rb')
+    PDF = PyPDF2.PdfFileReader(PDFFile)
+    pages = PDF.getNumPages()
+    key = '/Annots'
+    uri = '/URI'
+    ank = '/A'
+    urls=[]
+    for page in range(pages):
+        print("Current Page: {}".format(page))
+        pageSliced = PDF.getPage(page)
+        pageObject = pageSliced.getObject()
+        if key in pageObject.keys():
+            ann = pageObject[key]
+            for a in ann:
+                u = a.getObject()
+                if uri in u[ank].keys():
+                    urls.append(u[ank][uri])
+    return urls
