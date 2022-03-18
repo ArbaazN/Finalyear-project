@@ -16,6 +16,7 @@
    </style>
 {% endblock style %}
 {% block content %}
+
 <div class="page-content">
 	<!-- Section Banner -->
 	<div class="dez-bnr-inr dez-bnr-inr-md overlay-grey-dark" style="background-image:url(static/enroll/images/main-slider/11.jpg);background-repeat:no-repeat; background-size: 100%;">
@@ -24,9 +25,8 @@
 				<div class="dez-bnr-inr-entry align-m text-black">
 		  <div class=" job-search-form">
 			<h2 class="text-center" style="position: absolute;left:30%;top:10%;">Upload Your Resume</h2>
-			
-			<center>
 				<form  method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
 					<div class="input-group ">
 					  <input type="file" class="form-control" name="myfile" placeholder="Job Title, Keywords Or Company Name">
 					  <div class="input-group-prepend">
@@ -38,12 +38,6 @@
 		</div>
 			</div>
 		</div>
-		<br><br>
-
-
-		
-
-	
         </div>
         <footer class="site-footer">
             <div class="footer-top">
