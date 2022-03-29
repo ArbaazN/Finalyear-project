@@ -15,10 +15,9 @@ urlpatterns = [
     path('pagination',views.pagination,name='pagination'),
     path('sea_pag',views.sea_pag,name='sea_pag'),
     path('rsm_a',views.rsm_a,name='rsm_a'),
-    #path('predict_page',views.predict_page,name='predict_page'),
     path('predict/',views.predict, name='predict'),
-    # path('predict1/',views.predict1, name='predict1'),
     path('predict/result',views.result),
+    path('display',views.display,name='display'),
 ]
 
 if settings.DEBUG:

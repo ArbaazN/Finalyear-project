@@ -129,7 +129,7 @@ def job_search(request):
 			df1.drop(['comp_skills'],axis=1,inplace=True)
 			df1.drop_duplicates(keep='first',inplace=True)
 			dfz = df1.reset_index(drop=True)
-			dfc=dfz.to_csv("C:\\Users\\admin\\Desktop\\Finalyear\\search_file.csv",index=False)
+			dfc=dfz.to_csv("D:\\Users\\sahil\\Desktop\\Final_year_project\\Finalyear-project-master\\data\\search_file.csv",index=False)
 			result_final = dfz
 			result_final=result_final.to_json(orient='records')
 			data=[]
@@ -338,34 +338,56 @@ def rsm_a(request):
         else:
             pass
 
-        """-----------0------------"""
-        name=proper_name(resume_text)
-        data.append(name)
-        """-----------1-------------"""
-        phone_number=extract_phone_number(text)
-        data.append(phone_number)
-        """-----------2-------------"""
-        emails=extract_emails(text)
-        data.append(emails[0])
-        """-----------3-------------"""
-        skills_list=list(extract_skills(text))
-        data.append(skills_list)
-        """-----------4-------------"""
-        skills_score=extract_skills_score(text)
-        data.append(skills_score)
-        """-----------5-------------"""
-        linkedin_urls=extract_linkedin(urls)
-        data.append(linkedin_urls)
-        """-----------6-------------"""
-        Github_urls=extract_Github(urls)
-        data.append(Github_urls)
-        """-----------7-------------"""
-        education_score=Validation_education(text)
-        data.append(education_score)       
-        if data:
+        if((text != '' ) and (resume_text != '')):
+            """-----------0------------"""
+            name=proper_name(resume_text)
+            if(name==''):
+                data.append(None)
+            else:
+                data.append(name)
+            """-----------1-------------"""
+            phone_number=extract_phone_number(text)
+            if(phone_number==''):
+                data.append(None)
+            else:
+                data.append(phone_number)
+            """-----------2-------------"""
+            emails=extract_emails(text)
+            if len(emails):
+                data.append(emails[0])
+            else:
+                data.append(None)
+            """-----------3-------------"""
+            skills_list=list(extract_skills(text))
+            data.append(skills_list)
+            """-----------4-------------"""
+            skills_score=extract_skills_score(text)
+            data.append(skills_score)
+            """-----------5-------------"""
+            linkedin_urls=extract_linkedin(urls)
+            if(linkedin_urls==''):
+                data.append(None)
+            else:
+                data.append(linkedin_urls)
+            """-----------6-------------"""
+            Github_urls=extract_Github(urls)
+            if(Github_urls==''):
+                data.append(None)
+            else:
+                data.append(Github_urls)
+            """-----------7-------------"""
+            education_score=Validation_education(text)
+            data.append(education_score)
+            "--------------8---------------"
+            experience_score=Validation_experience(resume_text)
+            data.append(experience_score)       
+            "---------------9--------------"
+            project_score=Validate_Projects(resume_text)
+            data.append(project_score)
             return redirect('display')
         else:
-            messages.info(request,'Blank Document')
+            return messages.info(request,'Blank Document')
+            
     return render(request, 'enroll/rsm_a.html')
 
 def display(request):
@@ -373,19 +395,51 @@ def display(request):
     phone_number=data[1]
     email=data[2]
     skills_list=data[3]
-    skils_score=data[4]
+    skills_score=data[4]
     linkedin_url=data[5]
     Github_url=data[6]
     education_score=data[7]
+    experience_score=data[8]
+    project_score=data[9]
     data.clear()
-    return render(request,'enroll/display.html',{ 'name': name,'phone_number':phone_number,
-                                            'email':email,
-                                            'skills_list':skills_list,
-                                            'skills_score':skils_score,
-                                            'linkedin_url':linkedin_url,
-                                            'Github_url':Github_url,
-                                            'education_score':education_score
-                                        })
+    "5+5++5+20+20+20+5=80"
+    if(phone_number):
+        phone_marks=5
+    else:
+        phone_marks=0
+    if(email):
+        email_marks=5
+    else:
+        email_marks=0   
+    if(linkedin_url):
+        linkedin_marks=5
+    else:
+        linkedin_marks=0
+    if(skills_score < 8):
+        skills_marks=10
+    else:
+        skills_marks=20
+    if(education_score !=0):
+        education_marks=20
+    else:
+        education_marks=0
+    if((Github_url != None) or (project_score != 0)):
+        project_marks=20
+    else:
+        project_marks=0
+    if(experience_score != 0):
+        experience_marks=5
+    else:
+        experience_marks=0
+
+    return render(request,'enroll/display.html',{ 'name': name,'phone_marks':phone_marks,
+                                            'email_marks':email_marks,
+                                            'skills_marks':skills_marks,
+                                            'linkedin_marks':linkedin_marks,
+                                            'education_marks':education_marks,
+                                            'project_marks':project_marks,
+                                            'experience_marks':experience_marks,
+                                        })  
 
 def extract_text_from_pdf(pdf_path):
     return extract_text(pdf_path)
@@ -417,21 +471,22 @@ def extract_name(resume_text):
         return span.text
 #Cleaning and Comparing and returning name from Resume      
 def proper_name(resume_text):
-    name1=extract_name(resume_text)
-    if(name1 != None):
-        tokenize_name1=name1.split()
-        first_name1=tokenize_name1[0]
-        last_name1=tokenize_name1[1]
-    resume_text=resume_text.split()
-    first_name=resume_text[0]
-    last_name=resume_text[1]
-    full_name=first_name+' '+last_name
-    if(name1 == None):
-        return full_name
-    elif(first_name1==first_name and last_name1==last_name):
-        return name1
-    else:
-        return full_name
+    if(resume_text != ''):
+        name1=extract_name(resume_text)
+        if(name1 != None):
+            tokenize_name1=name1.split()
+            first_name1=tokenize_name1[0]
+            last_name1=tokenize_name1[1]
+        resume_text=resume_text.split()
+        first_name=resume_text[0]
+        last_name=resume_text[1]
+        full_name=first_name+' '+last_name
+        if(name1 == None):
+            return full_name
+        elif(first_name1==first_name and last_name1==last_name):
+            return name1
+        else:
+            return full_name
 
 """----------------------------------------------------------------------"""
 #Mobile Number Extracting
@@ -563,3 +618,31 @@ def extract_urls(pdf_path):
                 if uri in u[ank].keys():
                     urls.append(u[ank][uri])
     return urls
+
+Experience = ['accomplishments','experience','professional experience','leadership','companies','worked','publications',]
+
+def Validation_experience(resume_text):
+    resume_text = resume_text.strip()
+    resume_text = resume_text.split()
+    for i in range(len(resume_text)):
+        resume_text[i]=resume_text[i].lower()
+    score = 0
+    for i in Experience:
+        for j in resume_text:
+            if(i==j):
+                score += 1
+    return score
+
+Projects = ['projects','publications','certifications',]
+
+def Validate_Projects(resume_text):
+    resume_text = resume_text.strip()
+    resume_text = resume_text.split()
+    for i in range(len(resume_text)):
+        resume_text[i]=resume_text[i].lower()
+    score = 0
+    for i in Projects:
+        for j in resume_text:
+            if(i==j):
+                score += 1
+    return score
