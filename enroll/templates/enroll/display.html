@@ -10,8 +10,30 @@
 }
 
 .row {
-  max-width: 70rem;
-  margin: 0 auto; }
+  max-width: 80rem;
+  margin: 0 auto; 
+}
+.main-body{
+    display: flex;
+    flex-direction: column;
+    justify-content:space-around;
+    
+}
+.add{
+    /* background-color: aqua; */
+    display: flex;
+    font-size: 1.2rem;
+    font-weight: 300;
+}
+.greetmsg{
+    /* max-width: 80%; */
+   /* background-color: blue; */
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 350;
+
+
+}
    
    </style>
 {% endblock style %}
@@ -19,14 +41,86 @@
 {%load static%}
 {% csrf_token %}
 <div class="page-content">
-        <p>Your name: {{ name }}</p>
-        <p>phone marks : {{ phone_marks }}</p>
-        <p>email marks : {{ email_marks }}</p>
-        <p>skills marks : {{ skills_marks }}</p>
-        <p>linkedin marks : {{ linkedin_marks }}</p>
-        <p>education marks : {{ education_marks }}</p>
-        <p>project marks : {{ project_marks }}</p>
-        <p>experience marks : {{ experience_marks }}</p>        
+    <div class="row" >
+        <div class="col-md-5  main-body">
+            <h2>Resume Analyser</h2>
+            
+            <p class="add">Our free AI-powered resume checker scores your resume on key criteria recruiters and hiring managers look for. Get actionable steps to revamp your resume and land more interviews.</p>
+        </div>
+        <div id="container" class="col-md-7">
+            <canvas id="pie-chart"></canvas>        
+        </div>
+    </div>
+    <div class="row mt-3"  >
+        
+            {% if totMarks < 20 %}
+            <div class="card border-primary mb-3" >
+                <div class="card-header"> 
+                    <h4 class="greetmsg">Your resume scored {{totMarks}} out of 100.</h4>
+                </div>
+                <div class="card-body text-primary">
+                    <p class="card-text">It seems like your resume scored poorly on key checks that hiring managers and resume screening software scan your resume for. But don't worry! With a few simple changes to your resume, you can increase your score by 20+ points.</p>
+                </div>
+              </div>
+            {%elif totMarks >= 20 and totMarks < 50 %}
+            <div class="card border-primary mb-3" >
+                <div class="card-header text-primary"> 
+                    <h4 class="greetmsg">Your resume scored {{totMarks}} out of 100.</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">It seems like your resume scored poorly on key checks that hiring managers and resume screening software scan your resume for. But don't worry! With a few simple changes to your resume, you can increase your score by 40+ points.</p>
+                </div>
+              </div>
+            {%elif totMarks >= 50 and totMarks < 80 %}
+            <div class="card border-primary mb-3" >
+                <div class="card-header text-primary"> 
+                    <h4 class="greetmsg">Your resume scored {{totMarks}} out of 100.</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">It seems like your resume scored poorly on key checks that hiring managers and resume screening software scan your resume for. But don't worry! With a few simple changes to your resume, you can increase your score by 60+ points.</p>
+                </div>
+              </div>
+            {%elif totMarks >= 80 and totMarks < 100 %}
+            <div class="card border-primary mb-3" >
+                <div class="card-header text-primary"> 
+                    <h4 class="greetmsg">Your resume scored {{totMarks}} out of 100.</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">It seems like your resume scored poorly on key checks that hiring managers and resume screening software scan your resume for. But don't worry! With a few simple changes to your resume, you can increase your score by 60+ points.</p>
+                </div>
+              </div>
+            {%endif%}
+            
+        </div>
+    </div>
+    
+    
+      <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+      <script>
+    
+        var config = {
+          type: 'pie',
+          data: {
+            datasets: [{
+              data: {{data|safe}},
+              backgroundColor: [
+                '#696969', '#FF5733','#33FF33','#49FFE1','#FF499C'
+              ],
+              label: 'Scores'
+            }],
+            labels: {{labels|safe}}
+          },
+          options: {
+            responsive: true
+          }
+        };
+    
+        window.onload = function() {
+          var ctx = document.getElementById('pie-chart').getContext('2d');
+          window.myPie = new Chart(ctx, config);
+        };
+    
+      </script>
 </div>
 <footer class="site-footer">
     <div class="footer-top">
