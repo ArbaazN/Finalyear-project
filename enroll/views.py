@@ -32,6 +32,7 @@ from pdf2docx import parse ,Converter
 import docx2txt
 from pdfminer.high_level import extract_text
 from spacy.matcher import Matcher
+import locationtagger
 nlp = spacy.load('en_core_web_sm')
 matcher = Matcher(nlp.vocab)
 data=[]
@@ -337,7 +338,8 @@ def rsm_a(request):
             resume_text=extract_text_from_docx('./demo.docx')    
         else:
             pass
-
+        place_entity = locationtagger.find_locations(text = resume_text)
+        cities=place_entity.cities
         if((text != '' ) and (resume_text != '')):
             """-----------0------------"""
             name=proper_name(resume_text)
@@ -384,6 +386,11 @@ def rsm_a(request):
             "---------------9--------------"
             project_score=Validate_Projects(resume_text)
             data.append(project_score)
+            "---------------10--------------"
+            if len(cities):
+                data.append(cities)
+            else:
+                data.append(None)
             return redirect('display')
         else:
             return messages.info(request,'Blank Document')
@@ -401,8 +408,9 @@ def display(request):
     education_score=data[7]
     experience_score=data[8]
     project_score=data[9]
+    cities=data[10]
     data.clear()
-    "5+5++5+20+20+20+5=80"
+    "5+5+10+30+20+20+5+5="
     if(phone_number):
         phone_marks=5
     else:
@@ -412,13 +420,15 @@ def display(request):
     else:
         email_marks=0   
     if(linkedin_url):
-        linkedin_marks=5
+        linkedin_marks=10
     else:
         linkedin_marks=0
     if(skills_score < 8):
         skills_marks=10
+    elif(skills_score > 8 and skills_score < 15):
+        skills_marks=15
     else:
-        skills_marks=20
+        skills_marks=30
     if(education_score !=0):
         education_marks=20
     else:
@@ -431,15 +441,22 @@ def display(request):
         experience_marks=5
     else:
         experience_marks=0
+    if(cities):
+        location_marks=5
+    else:
+        location_marks=0
+    labels=['phone', 'email', 'linkedin', 'skills','education','project','Experience','Location']
+    data1=[phone_marks,email_marks, linkedin_marks, skills_marks, education_marks,project_marks,experience_marks,location_marks]
+    totMarks=0
+    for j in data1:
+        totMarks=totMarks+j
 
-    return render(request,'enroll/display.html',{ 'name': name,'phone_marks':phone_marks,
-                                            'email_marks':email_marks,
-                                            'skills_marks':skills_marks,
-                                            'linkedin_marks':linkedin_marks,
-                                            'education_marks':education_marks,
-                                            'project_marks':project_marks,
-                                            'experience_marks':experience_marks,
-                                        })  
+    return render(request,'enroll/display.html',{
+        'labels': labels,
+        'data': data1,
+        'totMarks':totMarks,
+        
+    })  
 
 def extract_text_from_pdf(pdf_path):
     return extract_text(pdf_path)
@@ -619,7 +636,7 @@ def extract_urls(pdf_path):
                     urls.append(u[ank][uri])
     return urls
 
-Experience = ['accomplishments','experience','professional experience','leadership','companies','worked','publications',]
+Experience = ['accomplishments','experience','professional experience','leadership','companies','worked','publications']
 
 def Validation_experience(resume_text):
     resume_text = resume_text.strip()
@@ -634,7 +651,7 @@ def Validation_experience(resume_text):
     return score
 
 Projects = ['projects','publications','certifications',]
-
+"--------------------------------------------------------------------------------------"
 def Validate_Projects(resume_text):
     resume_text = resume_text.strip()
     resume_text = resume_text.split()
