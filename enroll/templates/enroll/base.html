@@ -34,7 +34,7 @@
   {% block style %}
   {% endblock style %}
 </head>
-<body id="bg">
+<body id="myPage" data-spy="scroll" data-target=".navbar" data-offset="60">
 <div id="loading-area"></div>
 <div class="page-wraper">
 	<!-- header -->
@@ -57,8 +57,7 @@
                     <div class="extra-nav">
                         <div class="extra-cell">
                              {% if user.is_authenticated %}
-                            <!-- <h3>Hello{{ fname }}</h3>
-                            <h4>You are successfully logged in</h4> -->
+                            
                             <a href="/signout" style="text-decoration: none;" class="site-button"><i class="fa fa-lock"></i> Sign Out</a>
                             {% else %}
                             <a href="/signup"  style="text-decoration: none;" class="site-button"><i class="fa fa-user"></i> Sign Up</a>
@@ -74,24 +73,24 @@
                         </form>
                     </div>
                     <!-- main nav -->
-                    <div class="header-nav navbar-collapse collapse justify-content-start" id="navbarNavDropdown">
+                    <div class="header-nav navbar-collapse collapse justify-content-start" data-toggle="collapse" id="navbarNavDropdown">
                         <ul class="nav navbar-nav">
 							<li class="active">
 								<a href="/"  style="text-decoration: none;">Home</a>
 							</li>
 							<li>
-								<a href="#"  style="text-decoration: none;">About </a>
+								<a href="#about-us"  style="text-decoration: none;">About </a>
 								
 							</li>
 							<li>
-								<a href="#"  style="text-decoration: none;">Services</a>
+								<a href="#services"  style="text-decoration: none;">Services</a>
 								
 							</li>
 							<li>
-								<a href="#" style="text-decoration: none;">Team </a>
+								<a href="#team" style="text-decoration: none;">Team </a>
 							</li>
 							<li>
-								<a href="#" style="text-decoration: none;">Contact </a>
+								<a href="#contact" style="text-decoration: none;">Contact </a>
 							</li>
 						</ul>			
                     </div>
@@ -176,7 +175,7 @@
                 </div>
             </div>
         </div>
-    </footer> --> -->
+    </footer> --> 
     <!-- Footer END
     <!-- scroll top button -->
     <button class="scroltop fa fa-arrow-up" ></button>
