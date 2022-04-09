@@ -32,7 +32,7 @@ from pdf2docx import parse ,Converter
 import docx2txt
 from pdfminer.high_level import extract_text
 from spacy.matcher import Matcher
-import locationtagger
+
 nlp = spacy.load('en_core_web_sm')
 matcher = Matcher(nlp.vocab)
 data=[]
@@ -338,8 +338,6 @@ def rsm_a(request):
             resume_text=extract_text_from_docx('./demo.docx')    
         else:
             pass
-        place_entity = locationtagger.find_locations(text = resume_text)
-        cities=place_entity.cities
         if((text != '' ) and (resume_text != '')):
             """-----------0------------"""
             name=proper_name(resume_text)
@@ -386,11 +384,6 @@ def rsm_a(request):
             "---------------9--------------"
             project_score=Validate_Projects(resume_text)
             data.append(project_score)
-            "---------------10--------------"
-            if len(cities):
-                data.append(cities)
-            else:
-                data.append(None)
             return redirect('display')
         else:
             return messages.info(request,'Blank Document')
@@ -408,7 +401,6 @@ def display(request):
     education_score=data[7]
     experience_score=data[8]
     project_score=data[9]
-    cities=data[10]
     data.clear()
     "5+5+10+30+20+20+5+5="
     if(phone_number):
@@ -438,15 +430,11 @@ def display(request):
     else:
         project_marks=0
     if(experience_score != 0):
-        experience_marks=5
+        experience_marks=10
     else:
         experience_marks=0
-    if(cities):
-        location_marks=5
-    else:
-        location_marks=0
-    labels=['phone', 'email', 'linkedin', 'skills','education','project','Experience','Location']
-    data1=[phone_marks,email_marks, linkedin_marks, skills_marks, education_marks,project_marks,experience_marks,location_marks]
+    labels=['phone', 'email', 'linkedin', 'skills','education','project','Experience']
+    data1=[phone_marks,email_marks, linkedin_marks, skills_marks, education_marks,project_marks,experience_marks]
     totMarks=0
     for j in data1:
         totMarks=totMarks+j
