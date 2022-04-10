@@ -87,10 +87,10 @@ WSGI_APPLICATION = 'Finalyear.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'd21d3m7rs5lh9g',
-        'USER':'xasgjqafnbwjjt',
-        'PASSWORD':'668ad0d8e7ef6dd06737876f202f1498a98c218a1f2fcf27b7215274c352bf97',
-        'HOST':'ec2-52-203-118-49.compute-1.amazonaws.com',
+        'NAME': 'd74q5p32d4kuta',
+        'USER':'jmczbyxffshyex',
+        'PASSWORD':'409091c0d4c31768071f0baac8d23bf12a1e42ab3c8f4e0c780a43f8bc17fe39',
+        'HOST':'ec2-52-73-155-171.compute-1.amazonaws.com',
         'PORT':'5432',
     }
 }
